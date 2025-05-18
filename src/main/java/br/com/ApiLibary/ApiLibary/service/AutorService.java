@@ -47,6 +47,7 @@ public class AutorService {
         repository.delete(autor);
     }
 
+    //Utilizando a Example para realizar o metodo de pesquisa
     public List<Autor> pesquisa(String nome, String nacionalidade){
         var autor = new Autor();
         autor.setNome(nome);

@@ -2,6 +2,7 @@ package br.com.ApiLibary.ApiLibary.controller.common;
 
 import br.com.ApiLibary.ApiLibary.controller.dto.ErroCampo;
 import br.com.ApiLibary.ApiLibary.controller.dto.ErroResposta;
+import br.com.ApiLibary.ApiLibary.exceptions.CampoInvalidoExeception;
 import br.com.ApiLibary.ApiLibary.exceptions.OperacaoNaoPerminitidaException;
 import br.com.ApiLibary.ApiLibary.exceptions.RegistroDuplicadoException;
 import org.springframework.http.HttpStatus;
@@ -41,6 +42,15 @@ public class GlobalExcepstionHandler {
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ErroResposta handleOperacaoNaoPerminitidaException(OperacaoNaoPerminitidaException e){
         return ErroResposta.respostaPadrao(e.getMessage());
+    }
+
+    @ExceptionHandler(CampoInvalidoExeception.class)
+    @ResponseStatus(HttpStatus.UNPROCESSABLE_ENTITY)
+    public  ErroResposta handleCampoInvalidoExeception(CampoInvalidoExeception e){
+        return new ErroResposta(
+                HttpStatus.UNPROCESSABLE_ENTITY.value(),
+                "Erro de validação",
+                List.of(new ErroCampo(e.getCampo(), e.getMessage())));
     }
 
     @ExceptionHandler(RuntimeException.class)

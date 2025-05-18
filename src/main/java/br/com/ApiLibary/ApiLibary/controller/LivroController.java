@@ -1,14 +1,14 @@
 package br.com.ApiLibary.ApiLibary.controller;
 
 import br.com.ApiLibary.ApiLibary.controller.dto.CadastroLivroDTO;
-import br.com.ApiLibary.ApiLibary.controller.dto.ErroResposta;
 import br.com.ApiLibary.ApiLibary.controller.dto.ResultadoPesquisaLivroDTO;
 import br.com.ApiLibary.ApiLibary.controller.mappers.LivroMapper;
+import br.com.ApiLibary.ApiLibary.entities.GeneroLivro;
 import br.com.ApiLibary.ApiLibary.entities.Livro;
-import br.com.ApiLibary.ApiLibary.exceptions.RegistroDuplicadoException;
 import br.com.ApiLibary.ApiLibary.service.LivroService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -46,6 +46,53 @@ public class LivroController implements GenericController {
                 .map(livro -> {
                     service.deletar(livro);
                     return ResponseEntity.noContent().build();
+                }).orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
+    @GetMapping
+    public ResponseEntity<Page<ResultadoPesquisaLivroDTO>> pesquisarLivro(
+            @RequestParam(value = "isbn", required = false)
+            String isbn,
+            @RequestParam(value = "titulo", required = false)
+            String titulo,
+            @RequestParam(value = "nome-autor", required = false)
+            String nomeAutor,
+            @RequestParam(value = "genero", required = false)
+            GeneroLivro genero,
+            @RequestParam(value = "ano-publicacao", required = false)
+            Integer anoPublicacao,
+            @RequestParam(value = "pagina", defaultValue = "0")
+            Integer pagina,
+            @RequestParam(value = "tamanho-pagina", defaultValue = "10")
+            Integer tamanhoPagina
+
+    ){
+        Page<Livro> paginaResultado = service.pesquisa(
+                isbn, titulo, nomeAutor, genero, anoPublicacao, pagina, tamanhoPagina);
+
+        Page<ResultadoPesquisaLivroDTO> resultado = paginaResultado.map(mapper::toDTO);
+
+        return ResponseEntity.ok(resultado);
+    }
+
+    @PutMapping("{id}")
+    public ResponseEntity<Object> atualizarLivro(
+            @PathVariable("id") String id, @RequestBody @Valid CadastroLivroDTO dto){
+        return service.obterPorId(UUID.fromString(id))
+                .map(livro -> {
+                    Livro entidadeAuxi = mapper.toEntity(dto);
+
+                    livro.setDataPublicacao(entidadeAuxi.getDataPublicacao());
+                    livro.setIsbn(entidadeAuxi.getIsbn());
+                    livro.setPreco(entidadeAuxi.getPreco());
+                    livro.setGenero(entidadeAuxi.getGenero());
+                    livro.setTitulo(entidadeAuxi.getTitulo());
+                    livro.setAutor(entidadeAuxi.getAutor());
+
+                    service.atualizar(livro);
+
+                    return ResponseEntity.noContent().build();
+
                 }).orElseGet(() -> ResponseEntity.notFound().build());
     }
 }
